@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flask MySQL App</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        color: #667eea;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+      }
+
+      .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .form-section h2 {
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      input[type="email"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      .users-section {
+        margin-top: 30px;
+      }
+
+      .users-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .user-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #667eea;
+      }
+
+      .user-card h3 {
+        color: #667eea;
+        margin-bottom: 5px;
+      }
+
+      .user-card p {
+        color: #666;
+      }
+
+      .no-users {
+        text-align: center;
+        color: #999;
+        padding: 40px;
+        font-style: italic;
+      }
+
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Flask MySQL Application</h1>
+
+      <div class="form-section">
+        <h2>Add New User</h2>
+        <div class="success-message" id="successMessage">
+          User added successfully! 🎉
+        </div>
+        <form id="userForm">
+          <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+          <button type="submit">Add User</button>
+        </form>
+      </div>
+
+      <div class="users-section">
+        <h2>📋 Users List</h2>
+        <div id="usersList">
+          {% if users %} {% for user in users %}
+          <div class="user-card">
+            <h3>{{ user.name }}</h3>
+            <p>📧 {{ user.email }}</p>
+            <p style="color: #999; font-size: 12px">ID: {{ user.id }}</p>
+          </div>
+          {% endfor %} {% else %}
+          <div class="no-users">
+            No users found. Add your first user above! 👆
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("userForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+
+          try {
+            const response = await fetch("/add_user", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (response.ok) {
+              document.getElementById("successMessage").style.display = "block";
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            } else {
+              alert("Error adding user");
+            }
+          } catch (error) {
+            alert("Error: " + error);
+          }
+        });
+    </script>
+  </body>
+</html>

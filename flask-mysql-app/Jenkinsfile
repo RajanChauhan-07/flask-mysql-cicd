@@ -1,0 +1,129 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = "flask-mysql-app"
+    }
+    
+    stages {
+        stage('Cleanup') {
+            steps {
+                script {
+                    echo "Cleaning up old containers and images..."
+                    sh '''
+                        docker-compose down || true
+                        docker system prune -f || true
+                    '''
+                }
+            }
+        }
+        
+        stage('Clone Repository') {
+            steps {
+                echo "Cloning repository from GitHub..."
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    echo "Building Docker images..."
+                    sh 'docker-compose build'
+                }
+            }
+        }
+        
+        stage('Deploy Containers') {
+            steps {
+                script {
+                    echo "Deploying containers with docker-compose..."
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+        
+        stage('Wait for Services') {
+            steps {
+                script {
+                    echo "Waiting for services to be ready..."
+                    sleep(time: 15, unit: 'SECONDS')
+                }
+            }
+        }
+        
+        stage('Integration Test') {
+            steps {
+                script {
+                    echo "Running integration tests..."
+                    sh '''
+                        # Test if Flask app is responding
+                        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+                        if [ $response -eq 200 ]; then
+                            echo "✅ Flask app is healthy!"
+                        else
+                            echo "❌ Flask app health check failed!"
+                            exit 1
+                        fi
+                        
+                        # Verify database connection
+                        docker exec flask_app python -c "
+import mysql.connector
+import os
+import time
+
+time.sleep(5)
+
+try:
+    connection = mysql.connector.connect(
+        host='mysql',
+        user='root',
+        password='rootpassword',
+        database='flaskdb'
+    )
+    if connection.is_connected():
+        print('✅ Database connection successful!')
+        connection.close()
+    else:
+        print('❌ Database connection failed!')
+        exit(1)
+except Exception as e:
+    print(f'❌ Database connection error: {e}')
+    exit(1)
+"
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "🎉 Pipeline completed successfully!"
+            echo "Flask app is running at: http://<your-ec2-ip>:5000"
+        }
+        failure {
+            echo "❌ Pipeline failed!"
+            sh 'docker-compose logs'
+        }
+    }
+}
+```
+
+**Save the file:** Ctrl + S
+
+---
+
+## **Step 3.5: Verify All Files Are Created**
+
+In VS Code, you should see this structure in the Explorer:
+```
+flask-mysql-app/
+├── app.py ✅
+├── requirements.txt ✅
+├── Dockerfile ✅
+├── docker-compose.yml ✅
+├── Jenkinsfile ✅
+├── init.sql ✅
+└── templates/
+    └── index.html ✅
