@@ -11,6 +11,7 @@ pipeline {
                 script {
                     echo "Cleaning up old containers and images..."
                     sh '''
+                        cd flask-mysql-app &&
                         docker-compose down || true
                         docker system prune -f || true
                     '''
@@ -29,7 +30,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker images..."
-                    sh 'docker-compose build'
+                    sh 'cd flask-mysql-app && docker-compose build'
                 }
             }
         }
@@ -38,7 +39,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying containers with docker-compose..."
-                    sh 'docker-compose up -d'
+                    sh 'cd flask-mysql-app && docker-compose up -d'
                 }
             }
         }
@@ -108,22 +109,3 @@ except Exception as e:
         }
     }
 }
-```
-
-**Save the file:** Ctrl + S
-
----
-
-## **Step 3.5: Verify All Files Are Created**
-
-In VS Code, you should see this structure in the Explorer:
-```
-flask-mysql-app/
-├── app.py ✅
-├── requirements.txt ✅
-├── Dockerfile ✅
-├── docker-compose.yml ✅
-├── Jenkinsfile ✅
-├── init.sql ✅
-└── templates/
-    └── index.html ✅
